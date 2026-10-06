@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heading Out</title>
+<style>
+  :root {
+    --bg: #0e1013;
+    --card: #171a1f;
+    --line: #262a31;
+    --text: #eef0f3;
+    --muted: #8b929c;
+    --dim: #555b64;
+    --go: #4ade80;
+    --hurry: #fbbf24;
+    --late: #6b7280;
+    --warn: #f87171;
+    --route: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { height: 100%; }
+  body > * { flex-shrink: 0; }
+  body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    font-variant-numeric: tabular-nums;
+    padding: clamp(16px, 3vw, 40px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2.2vw, 28px);
+    cursor: none;              /* it's a wall display */
+    user-select: none;
+  }
+
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .clock { font-size: clamp(48px, 9vw, 120px); font-weight: 600; line-height: .9; letter-spacing: -0.03em; }
+  .date { color: var(--muted); font-size: clamp(16px, 1.8vw, 24px); margin-top: 8px; }
+
+  .now { text-align: right; }
+  .now .temp { font-size: clamp(40px, 7vw, 92px); font-weight: 300; line-height: .9; }
+  .now .temp small { font-size: .4em; color: var(--muted); margin-left: .3em; }
+  .now .meta { color: var(--muted); font-size: clamp(14px, 1.6vw, 22px); margin-top: 8px; }
+
+  .advice { display: flex; gap: 10px; flex-wrap: wrap; min-height: 1px; }
+  .chip {
+    font-size: clamp(16px, 1.8vw, 24px); font-weight: 600;
+    padding: .35em .8em; border-radius: 999px;
+    background: #2a2412; color: var(--hurry); border: 1px solid #4a3d16;
+  }
+  .chip.ok { background: #12251a; color: var(--go); border-color: #1d4029; }
+
+  .stops { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: clamp(14px, 2vw, 24px); flex: 1; }
+  .stop { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: clamp(16px, 2.2vw, 28px); display: flex; flex-direction: column; gap: 14px; }
+  .stop-head { display: flex; justify-content: space-between; color: var(--muted); font-size: clamp(14px, 1.5vw, 20px); gap: 12px; }
+  .stop-head b { color: var(--text); font-weight: 600; }
+
+  .hero .leave { font-size: clamp(40px, 6.5vw, 84px); font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+  .hero .leave small { font-size: .45em; font-weight: 500; color: var(--muted); }
+  .hero .detail { margin-top: 8px; font-size: clamp(15px, 1.6vw, 22px); color: var(--muted); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .go    { color: var(--go); }
+  .hurry { color: var(--hurry); }
+  .late  { color: var(--late); }
+
+  .route { display: inline-block; min-width: 2.2em; text-align: center; background: var(--route); color: #fff; font-weight: 700; border-radius: 6px; padding: .05em .35em; }
+  .delayed { color: var(--warn); font-weight: 600; }
+
+  .later { list-style: none; padding: 0; border-top: 1px solid var(--line); }
+  .later li { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: clamp(15px, 1.6vw, 22px); }
+  .later li:last-child { border-bottom: 0; }
+  .later .dest { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .later .arr { color: var(--dim); }
+  .empty { color: var(--muted); font-size: clamp(18px, 2vw, 26px); padding: 12px 0; }
+
+  .hours { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .hour { text-align: center; padding: 10px 4px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+  .hour .h { color: var(--muted); font-size: clamp(12px, 1.3vw, 17px); }
+  .hour .t { font-size: clamp(18px, 2.2vw, 30px); font-weight: 600; margin: 2px 0; }
+  .hour .r { font-size: clamp(12px, 1.3vw, 17px); color: var(--dim); }
+  .hour .r.wet { color: #60a5fa; font-weight: 600; }
+
+  footer { display: flex; justify-content: space-between; gap: 12px; color: var(--dim); font-size: 13px; flex-wrap: wrap; }
+  footer .bad { color: var(--warn); }
+  .badge { color: var(--hurry); font-weight: 700; letter-spacing: .08em; }
+
+  @media (max-width: 560px) {
+    .now { text-align: left; }
+    .hours { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="now" id="now"></div>
+  </header>
+
+  <div class="advice" id="advice"></div>
+  <main class="stops" id="stops"></main>
+  <section class="hours" id="hours"></section>
+  <footer id="footer"></footer>
+
+<script>
+  let state = null;        // last /api/status payload
+  let clockOffset = 0;     // server time minus device time, in ms
+  let lastFetchOk = 0;
+  let refreshMs = 30000;
+
+  const now = () => Date.now() + clockOffset;
+  const fmtTime = ms => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const fmtIso = iso => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const fmtHour = iso => new Date(iso).toLocaleTimeString([], { hour: "numeric" }).replace(":00", "");
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const ago = ms => {
+    const s = Math.max(0, Math.round((now() - ms) / 1000));
+    return s < 60 ? `${s}s ago` : `${Math.round(s / 60)} min ago`;
+  };
+
+  async function load() {
+    try {
+      const res = await fetch("/api/status", { cache: "no-store" });
+      state = await res.json();
+      clockOffset = state.now_ms - Date.now();
+      refreshMs = state.refresh_seconds * 1000;
+      lastFetchOk = Date.now();
+    } catch (e) {
+      // Server unreachable: keep showing the last data; the footer will flag it.
+    }
+    render();
+    setTimeout(load, refreshMs);
+  }
+
+  // Classify a single arrival given the walk time to its stop.
+  function leaveInfo(arrival, walk) {
+    const arriveMin = (arrival.arrival_ms - now()) / 60000;
+    const leave = arriveMin - walk;
+    if (leave >= 1)        return { cls: "go",    big: `${Math.floor(leave)}`, unit: "min", label: "Leave in", short: `leave in ${Math.floor(leave)}` , arriveMin };
+    if (leave >= 0)        return { cls: "go",    big: "Leave now", unit: "", label: "", short: "leave now", arriveMin };
+    if (leave >= -walk / 2) return { cls: "hurry", big: "Hurry", unit: "", label: "", short: "hurry", arriveMin };
+    return                        { cls: "late",  big: "Too late", unit: "", label: "", short: "too late", arriveMin };
+  }
+
+  function renderStop(stop) {
+    const upcoming = stop.arrivals.filter(a => a.arrival_ms > now());
+    const infos = upcoming.map(a => ({ a, i: leaveInfo(a, stop.walk_minutes) }));
+    // Hero = first bus you can still make; otherwise the next one.
+    const heroIdx = Math.max(0, infos.findIndex(x => x.i.cls !== "late"));
+    const hero = infos[heroIdx];
+    const rest = infos.slice(heroIdx + 1, heroIdx + 4);
+
+    const head = `<div class="stop-head"><b>${esc(stop.name)}</b><span>${stop.walk_minutes} min walk</span></div>`;
+    if (!hero) {
+      return `<article class="stop">${head}<div class="empty">${esc(stop.note || "No predictions right now")}</div></article>`;
+    }
+    const heroHtml = `
+      <div class="hero">
+        <div class="leave ${hero.i.cls}">${hero.i.label ? `<small>${hero.i.label} </small>` : ""}${hero.i.big}${hero.i.unit ? `<small> ${hero.i.unit}</small>` : ""}</div>
+        <div class="detail">
+          <span class="route">${esc(hero.a.route)}</span>
+          <span>to ${esc(hero.a.destination)} · arrives ${fmtTime(hero.a.arrival_ms)} (${Math.max(0, Math.round(hero.i.arriveMin))} min)</span>
+          ${hero.a.delayed ? `<span class="delayed">Delayed</span>` : ""}
+        </div>
+      </div>`;
+    const restHtml = rest.length ? `<ul class="later">${rest.map(({ a, i }) => `
+      <li>
+        <span class="route">${esc(a.route)}</span>
+        <span class="dest">${esc(a.destination)}${a.delayed ? ` · <span class="delayed">Delayed</span>` : ""}</span>
+        <span class="${i.cls}">${i.short}</span>
+        <span class="arr">${fmtTime(a.arrival_ms)}</span>
+      </li>`).join("")}</ul>` : "";
+    return `<article class="stop">${head}${heroHtml}${restHtml}</article>`;
+  }
+
+  function render() {
+    const t = new Date(now());
+    document.getElementById("clock").textContent = t.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    document.getElementById("date").textContent = t.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+    if (!state) return;
+
+    const w = state.weather.data;
+    document.getElementById("now").innerHTML = w ? `
+      <div class="temp">${w.temp_f}°<small>feels ${w.feels_f}°</small></div>
+      <div class="meta">${esc(w.summary)} · H ${w.high_f}° L ${w.low_f}° · wind ${w.wind_mph} mph · sunset ${fmtIso(w.sunset)}</div>` : "";
+
+    const chips = w ? [...w.advice] : [];
+    if (w && w.rain_starts && w.advice.includes("Bring an umbrella")) {
+      chips[chips.indexOf("Bring an umbrella")] = `Umbrella — rain likely from ${fmtIso(w.rain_starts)}`;
+    }
+    document.getElementById("advice").innerHTML = w
+      ? (chips.length ? chips.map(c => `<span class="chip">${esc(c)}</span>`).join("")
+                      : `<span class="chip ok">No umbrella or jacket needed</span>`)
+      : "";
+
+    const stops = state.buses.data || [];
+    document.getElementById("stops").innerHTML = stops.length
+      ? stops.map(renderStop).join("")
+      : `<div class="empty">Bus data unavailable</div>`;
+
+    document.getElementById("hours").innerHTML = w ? w.next_hours.map(h => `
+      <div class="hour">
+        <div class="h">${fmtHour(h.time)}</div>
+        <div class="t">${h.temp_f}°</div>
+        <div class="r ${h.rain_pct >= 30 ? "wet" : ""}">${h.rain_pct}% rain</div>
+      </div>`).join("") : "";
+
+    // Status line: make stale or failing data obvious instead of silently wrong.
+    const parts = [];
+    if (state.mock) parts.push(`<span class="badge">MOCK BUS DATA</span>`);
+    const b = state.buses, wx = state.weather;
+    parts.push(b.updated_ms ? `Buses ${ago(b.updated_ms)}` : "Buses never loaded");
+    if (b.error) parts.push(`<span class="bad">CTA: ${esc(b.error)}</span>`);
+    parts.push(wx.updated_ms ? `Weather ${ago(wx.updated_ms)}` : "Weather never loaded");
+    if (wx.error) parts.push(`<span class="bad">Weather: ${esc(wx.error)}</span>`);
+    const serverStale = Date.now() - lastFetchOk > refreshMs * 3;
+    document.getElementById("footer").innerHTML =
+      `<span>${parts.join(" · ")}</span>` +
+      (serverStale ? `<span class="bad">Can't reach dashboard server</span>` : `<span>Weather: Open-Meteo · Buses: CTA Bus Tracker</span>`);
+  }
+
+  setInterval(render, 1000);   // countdowns tick between fetches
+  load();
+  // Daily full reload picks up page changes and clears any slow memory leaks.
+  setTimeout(() => location.reload(), 24 * 3600 * 1000);
+</script>
+</body>
+</html>
