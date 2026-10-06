@@ -1,0 +1,12 @@
+{
+  "home": { "lat": 41.8781, "lon": -87.6298 },
+  "stops": [
+    { "id": "1001", "name": "Example stop · Northbound", "walk_minutes": 4, "routes": [] },
+    { "id": "1002", "name": "Example stop · Southbound", "walk_minutes": 5, "routes": [] }
+  ],
+  "port": 8080,
+  "bus_refresh_seconds": 30,
+  "weather_refresh_seconds": 600,
+  "umbrella_threshold_pct": 40,
+  "jacket_below_f": 55
+}
